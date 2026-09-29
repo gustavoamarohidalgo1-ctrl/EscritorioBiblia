@@ -1,4 +1,5 @@
 import BibliaCore
+import Combine // ObservableObject y @Published
 import Foundation
 
 /**

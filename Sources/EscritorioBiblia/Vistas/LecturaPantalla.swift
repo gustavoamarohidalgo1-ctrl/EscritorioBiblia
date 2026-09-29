@@ -36,7 +36,7 @@ struct LecturaPantalla: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .navigationTitle(referencia)
-        .background(atajosParaVolver)
+        .background { atajosParaVolver }
         .task(id: referencia) { await cargar() }
     }
 

@@ -66,11 +66,11 @@ struct TarjetaLectura: View {
         }
         .padding(.horizontal, 22)
         .padding(.vertical, 20)
-        .background(
+        .background {
             RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .fill(encima ? Color.fondoTarjetaResaltada : Color.fondoTarjeta)
                 .shadow(color: .black.opacity(0.35), radius: 4, y: 2)
-        )
+        }
         .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .onHover { encima = $0 }
         .accessibilityLabel("\(texto), \(completada ? "completada" : "pendiente")")

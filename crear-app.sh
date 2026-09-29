@@ -2,7 +2,7 @@
 # Crea "Mes de Septiembre.app" y su instalador .dmg en la carpeta build/.
 #   ./crear-app.sh                    → crea la app y el .dmg
 #   ./crear-app.sh --instalar         → además la copia a /Applications (Aplicaciones)
-#   ./crear-app.sh --biblia-completa  → mete los 66 libros, no solo los que usa el plan
+#   ./crear-app.sh --biblia-completa  → mete los 66 libros enteros, no solo lo que usa el plan
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -38,11 +38,9 @@ mkdir -p "$APP/Contents/Resources/Libros"
 if [[ $BIBLIA_COMPLETA == 1 ]]; then
     cp Sources/BibliaCore/Resources/Libros/*.z "$APP/Contents/Resources/Libros/"
 else
-    # ✅ Solo los libros que usa el plan (9 de 66): la app solo abre esas lecturas
-    LIBROS="$(python3 Datos/libros_del_plan.py)"
-    for libro in $LIBROS; do
-        cp "Sources/BibliaCore/Resources/Libros/$libro" "$APP/Contents/Resources/Libros/"
-    done
+    # ✅ Solo los versículos que usa el plan (de Salmos, por ejemplo, solo del 73 al 95): la app
+    # solo abre esas lecturas. El script comprueba que cada lectura da el mismo texto que antes
+    python3 Datos/libros_del_plan.py "$APP/Contents/Resources/Libros"
 fi
 cp -R Sources/BibliaCore/Resources/Fuentes "$APP/Contents/Resources/"
 cp Recursos/icono.icns "$APP/Contents/Resources/"

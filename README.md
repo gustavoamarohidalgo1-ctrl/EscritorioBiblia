@@ -23,8 +23,9 @@ En la carpeta del proyecto:
 Compila la app, crea **Mes de Septiembre.app** y la copia a **Aplicaciones**. También deja el
 instalador `build/Mes de Septiembre.dmg` por si quieres pasarla a otro Mac.
 
-La app solo lleva los libros que usa el plan (9 de 66), porque solo puede abrir esas lecturas.
-Si quieres los 66, añade `--biblia-completa`.
+La app solo lleva los versículos que usa el plan (de Salmos, por ejemplo, solo del 73 al 95),
+porque solo puede abrir esas lecturas; al crearla se comprueba que cada lectura da el mismo texto.
+Si quieres los 66 libros enteros, añade `--biblia-completa`.
 
 Como la app no está firmada con un certificado de Apple, la primera vez macOS no la deja abrir
 con doble clic: haz clic derecho sobre la app → **Abrir** → **Abrir**
@@ -49,7 +50,7 @@ swift run
 
 El texto fuente está en `Datos/origen/` (un `.txt` por libro). La app no lo lleva tal cual: lleva
 una versión ya limpia y comprimida, un 69 % más pequeña (4,4 MB → 1,4 MB los 66 libros), y solo
-de los libros que usa el plan (177 KB). Después de cambiar cualquier `.txt`, vuelve a generarla:
+con los versículos que usa el plan (95 KB). Después de cambiar cualquier `.txt`, vuelve a generarla:
 
 ```bash
 python3 Datos/compactar.py
@@ -80,7 +81,7 @@ Recursos/icono.icns            Icono de la app
 Datos/
 ├── origen/                    Los 66 libros de la Biblia (RVR 1960), texto fuente
 ├── compactar.py               Prepara los libros que lleva la app
-└── libros_del_plan.py         Qué libros usa el plan (los que mete crear-app.sh)
+└── libros_del_plan.py         Los versículos que usa el plan (los que mete crear-app.sh)
 Sources/
 ├── BibliaCore/                Todo lo que no es interfaz
 │   ├── Plan.swift             Plan de lectura del mes

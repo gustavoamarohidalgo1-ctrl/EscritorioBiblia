@@ -10,7 +10,11 @@ import Foundation
 public enum Biblia {
 
     // ✅ Los 60 pasajes usados más recientemente (ej. "Hechos 2:1-13")
-    private static let cache = CacheDePasajes(capacidad: 60)
+    private static let cache = CacheLRU<[String]>(capacidad: 60)
+
+    // ✅ Los 3 últimos libros abiertos, ya descomprimidos: las lecturas de un día son de 3 libros y
+    // las de los días siguientes suelen ser de los mismos (Juan, 2 Crónicas y Salmos, por ejemplo)
+    private static let librosAbiertos = CacheLRU<Data>(capacidad: 3)
 
     /// Líneas a mostrar: "N texto" por versículo, con "Capítulo N" antes de cada capítulo cuando
     /// la referencia es un rango. Lista vacía si el pasaje no tiene versículos.
@@ -40,8 +44,11 @@ public enum Biblia {
 
     /// El libro entero ya descomprimido (DEFLATE, el formato .zlib de Apple)
     static func texto(de libro: Libro) throws -> Data {
+        if let abierto = librosAbiertos[libro.archivo] { return abierto }
         let comprimido = try Data(contentsOf: Recursos.libros.appendingPathComponent(libro.archivo))
-        return try (comprimido as NSData).decompressed(using: .zlib) as Data
+        let texto = try (comprimido as NSData).decompressed(using: .zlib) as Data
+        librosAbiertos[libro.archivo] = texto
+        return texto
     }
 
     // MARK: - Lectura de las líneas
@@ -119,40 +126,40 @@ struct Rango {
     }
 }
 
-/// Caché LRU segura entre hilos
-final class CacheDePasajes: @unchecked Sendable {
+/// Caché LRU segura entre hilos: guarda los `capacidad` valores usados más recientemente
+final class CacheLRU<Valor>: @unchecked Sendable {
     private let capacidad: Int
-    private var pasajes: [String: [String]] = [:]
+    private var valores: [String: Valor] = [:]
     private var orden: [String] = [] // del menos al más usado
     private let cerrojo = NSLock()
 
     init(capacidad: Int) { self.capacidad = capacidad }
 
-    subscript(referencia: String) -> [String]? {
+    subscript(clave: String) -> Valor? {
         get {
             cerrojo.lock()
             defer { cerrojo.unlock() }
-            guard let lineas = pasajes[referencia] else { return nil }
-            usar(referencia)
-            return lineas
+            guard let valor = valores[clave] else { return nil }
+            usar(clave)
+            return valor
         }
         set {
             cerrojo.lock()
             defer { cerrojo.unlock() }
-            pasajes[referencia] = newValue
+            valores[clave] = newValue
             if newValue == nil {
-                orden.removeAll { $0 == referencia }
+                orden.removeAll { $0 == clave }
                 return
             }
-            usar(referencia)
+            usar(clave)
             if orden.count > capacidad {
-                pasajes[orden.removeFirst()] = nil
+                valores[orden.removeFirst()] = nil
             }
         }
     }
 
-    private func usar(_ referencia: String) {
-        if let posicion = orden.firstIndex(of: referencia) { orden.remove(at: posicion) }
-        orden.append(referencia)
+    private func usar(_ clave: String) {
+        if let posicion = orden.firstIndex(of: clave) { orden.remove(at: posicion) }
+        orden.append(clave)
     }
 }
