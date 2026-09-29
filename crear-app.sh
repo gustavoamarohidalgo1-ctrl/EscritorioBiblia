@@ -1,9 +1,20 @@
 #!/bin/bash
 # Crea "Mes de Septiembre.app" y su instalador .dmg en la carpeta build/.
-#   ./crear-app.sh             → crea la app y el .dmg
-#   ./crear-app.sh --instalar  → además la copia a /Applications (Aplicaciones)
+#   ./crear-app.sh                    → crea la app y el .dmg
+#   ./crear-app.sh --instalar         → además la copia a /Applications (Aplicaciones)
+#   ./crear-app.sh --biblia-completa  → mete los 66 libros, no solo los que usa el plan
 set -euo pipefail
 cd "$(dirname "$0")"
+
+INSTALAR=0
+BIBLIA_COMPLETA=0
+for opcion in "$@"; do
+    case "$opcion" in
+        --instalar) INSTALAR=1 ;;
+        --biblia-completa) BIBLIA_COMPLETA=1 ;;
+        *) echo "Opción desconocida: $opcion" >&2; exit 1 ;;
+    esac
+done
 
 NOMBRE="Mes de Septiembre"
 EJECUTABLE="EscritorioBiblia"
@@ -11,8 +22,9 @@ IDENTIFICADOR="com.example.appbiblialeeer.septiembre"
 VERSION="1.0.0"
 
 echo "▸ Compilando (versión optimizada)…"
-swift build -c release --product "$EJECUTABLE"
-BINARIOS="$(swift build -c release --show-bin-path)"
+# ✅ -Osize: optimiza por tamaño; en una app de lectura la velocidad no cambia de forma apreciable
+swift build -c release -Xswiftc -Osize --product "$EJECUTABLE"
+BINARIOS="$(swift build -c release -Xswiftc -Osize --show-bin-path)"
 
 APP="build/$NOMBRE.app"
 echo "▸ Armando $APP…"
@@ -22,8 +34,17 @@ cp "$BINARIOS/$EJECUTABLE" "$APP/Contents/MacOS/"
 # ✅ Sin los símbolos de depuración: el programa ocupa bastante menos y funciona igual
 strip -S -x "$APP/Contents/MacOS/$EJECUTABLE"
 # Los libros y la fuente Lora (la app los busca en Contents/Resources)
-cp -R Sources/BibliaCore/Resources/Libros Sources/BibliaCore/Resources/Fuentes "$APP/Contents/Resources/"
-rm -f "$APP/Contents/Resources/Libros/origen.sha256" # solo lo usan los tests
+mkdir -p "$APP/Contents/Resources/Libros"
+if [[ $BIBLIA_COMPLETA == 1 ]]; then
+    cp Sources/BibliaCore/Resources/Libros/*.z "$APP/Contents/Resources/Libros/"
+else
+    # ✅ Solo los libros que usa el plan (9 de 66): la app solo abre esas lecturas
+    LIBROS="$(python3 Datos/libros_del_plan.py)"
+    for libro in $LIBROS; do
+        cp "Sources/BibliaCore/Resources/Libros/$libro" "$APP/Contents/Resources/Libros/"
+    done
+fi
+cp -R Sources/BibliaCore/Resources/Fuentes "$APP/Contents/Resources/"
 cp Recursos/icono.icns "$APP/Contents/Resources/"
 
 cat > "$APP/Contents/Info.plist" <<PLIST
@@ -69,10 +90,11 @@ TEMPORAL="$(mktemp -d)"
 cp -R "$APP" "$TEMPORAL/"
 ln -s /Applications "$TEMPORAL/Aplicaciones"
 rm -f "build/$NOMBRE.dmg"
-hdiutil create -quiet -volname "$NOMBRE" -srcfolder "$TEMPORAL" -ov -format UDZO "build/$NOMBRE.dmg"
+# ✅ ULMO (LZMA) comprime más que el UDZO por defecto; se abre en macOS 10.15 o posterior
+hdiutil create -quiet -volname "$NOMBRE" -srcfolder "$TEMPORAL" -ov -format ULMO "build/$NOMBRE.dmg"
 rm -rf "$TEMPORAL"
 
-if [[ "${1:-}" == "--instalar" ]]; then
+if [[ $INSTALAR == 1 ]]; then
     echo "▸ Instalando en /Applications…"
     rm -rf "/Applications/$NOMBRE.app"
     cp -R "$APP" /Applications/

@@ -59,6 +59,8 @@ public enum Biblia {
             while i < total {
                 let capitulo = numero(bytes, &i)
                 let versiculo = numero(bytes, &i)
+                // Línea incompleta al final (no pasa con los libros generados): se ignora en vez de fallar
+                if i > total { break }
                 let inicioTexto = i
                 while i < total && bytes[i] != saltoDeLinea { i += 1 }
                 let finTexto = i
