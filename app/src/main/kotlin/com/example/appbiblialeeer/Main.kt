@@ -3,8 +3,6 @@ package com.example.appbiblialeeer
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.painter.BitmapPainter
-import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.isMetaPressed
@@ -16,6 +14,9 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
+import com.example.appbiblialeeer.data.biblePlan
+import com.example.appbiblialeeer.storage.BibleTextStorage
+import com.example.appbiblialeeer.storage.loadCompletedDays
 import com.example.appbiblialeeer.storage.planPrefs
 import com.example.appbiblialeeer.ui.AppBiblialectura
 import com.example.appbiblialeeer.ui.DespachadorAtras
@@ -35,20 +36,14 @@ fun main() {
     System.setProperty("apple.awt.application.name", NOMBRE_APP)
 
     precargarPrimerFotograma()
-
-    val icono = ImageIO.read(checkNotNull(object {}.javaClass.getResource("/icono.png")))
-    // Icono del Dock al ejecutar sin empaquetar (la app empaquetada usa icono.icns)
-    runCatching {
-        val taskbar = Taskbar.getTaskbar()
-        if (taskbar.isSupported(Taskbar.Feature.ICON_IMAGE)) taskbar.iconImage = icono
-    }
+    ponerIconoDelDock()
 
     application {
         val despachadorAtras = remember { DespachadorAtras() }
         Window(
             onCloseRequest = ::exitApplication,
             title = NOMBRE_APP,
-            icon = remember { BitmapPainter(icono.toComposeImageBitmap()) },
+            // Sin icon: en macOS las ventanas no muestran icono (el del Dock va aparte)
             state = rememberWindowState(
                 size = DpSize(900.dp, 820.dp),
                 position = WindowPosition(Alignment.Center)
@@ -72,13 +67,35 @@ fun main() {
 /**
  * ✅ Mientras se crea la ventana, un hilo aparte deja listo lo que el primer fotograma necesita:
  * el progreso guardado (se lee del disco) y la fuente Lora (se lee de los recursos de la app).
+ * Después carga las lecturas del primer día sin completar: al abrirlo, el texto ya está en memoria
+ * y el lector de pasajes ya está "en caliente" (la primera lectura en frío tarda ~45 ms, luego 1-4 ms).
  */
 private fun precargarPrimerFotograma() {
     thread(name = "precarga", isDaemon = true) {
         // Solo es una precarga: si algo falla, la pantalla lo carga como siempre
         runCatching {
-            planPrefs().keys()
+            val preferences = planPrefs()
+            val completados = loadCompletedDays(preferences)
             LoraFamily
+            biblePlan.firstOrNull { completados[it.dia] != true }
+                ?.let { BibleTextStorage.prefetchDay(it.referencias) }
+        }
+    }
+}
+
+/**
+ * Icono del Dock solo al ejecutar sin empaquetar (./gradlew run): la app empaquetada ya lo toma de
+ * icono.icns (el lanzador de jpackage define jpackage.app-path).
+ * ✅ En otro hilo: decodificar el PNG con ImageIO tarda ~300 ms en frío y retrasaba la ventana.
+ */
+private fun ponerIconoDelDock() {
+    if (System.getProperty("jpackage.app-path") != null) return
+    thread(name = "icono", isDaemon = true) {
+        runCatching {
+            val taskbar = Taskbar.getTaskbar()
+            if (taskbar.isSupported(Taskbar.Feature.ICON_IMAGE)) {
+                taskbar.iconImage = ImageIO.read(checkNotNull(object {}.javaClass.getResource("/icono.png")))
+            }
         }
     }
 }

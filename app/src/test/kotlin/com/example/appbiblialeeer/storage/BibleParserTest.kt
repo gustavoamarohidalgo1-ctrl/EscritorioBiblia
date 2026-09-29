@@ -36,6 +36,34 @@ class BibleParserTest {
         }
     }
 
+    // Los 66 libros completos y en orden: cada capítulo empieza en el versículo 1 y no se salta
+    // ninguno (así apareció que faltaba Génesis 33:12)
+    @Test
+    fun librosCompletosYEnOrden() {
+        val formato = Regex("""^\((\d+), (\d+), (\d+), '.*'\),?$""")
+        val libros = File("src/main/resources/origen").listFiles()!!
+        assertEquals(66, libros.size)
+        for (archivo in libros) {
+            val id = BibleParser.resolveBook(archivo.nameWithoutExtension.replace('_', ' ')).id
+            var capitulo = 0
+            var versiculo = 0
+            archivo.readLines().forEachIndexed { i, linea ->
+                if (linea.isEmpty()) return@forEachIndexed
+                val donde = "${archivo.name}:${i + 1}"
+                val partes = checkNotNull(formato.matchEntire(linea)) { "$donde: formato inválido" }
+                val (libro, c, v) = partes.destructured.toList().map { it.toInt() }
+                assertEquals("$donde: libro", id, libro)
+                if (c != capitulo) {
+                    assertEquals("$donde: capítulo", capitulo + 1, c)
+                    capitulo = c
+                    versiculo = 0
+                }
+                assertEquals("$donde: versículo", versiculo + 1, v)
+                versiculo = v
+            }
+        }
+    }
+
     @Test
     fun capituloCompletoSinTitulos() {
         val lineas = passage("2 Crónicas 6")

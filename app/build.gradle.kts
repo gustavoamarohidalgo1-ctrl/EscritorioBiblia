@@ -21,9 +21,11 @@ kotlin {
 
 dependencies {
     // Compose para el sistema operativo donde se compila (en un Mac: macOS arm64 o x64)
-    implementation(compose.desktop.currentOs)
+    implementation(compose.desktop.currentOs) {
+        // ✅ Trae Material 2 (≈1,5 MB) y la app solo usa Material 3
+        exclude(group = "org.jetbrains.compose.material", module = "material")
+    }
     implementation(libs.compose.material3)
-    implementation(libs.compose.material.icons.core)
     // Dispatchers.Main en escritorio (hilo de Swing)
     implementation(libs.kotlinx.coroutines.swing)
     testImplementation(libs.junit)
@@ -46,6 +48,17 @@ compose.desktop {
                 bundleID = "com.example.appbiblialeeer.septiembre"
                 iconFile.set(project.file("icono.icns"))
             }
+        }
+
+        // ./gradlew packageReleaseDmg: la versión optimizada para instalar
+        buildTypes.release.proguard {
+            // ✅ ProGuard quita el código de las librerías (Compose, Kotlin, coroutines) que la app no usa
+            isEnabled.set(true)
+            optimize.set(true)
+            // Sin ofuscar: si algo falla, el informe de error muestra los nombres reales
+            obfuscate.set(false)
+            // ✅ Un solo .jar: menos archivos que abrir y leer al arrancar
+            joinOutputJars.set(true)
         }
     }
 }

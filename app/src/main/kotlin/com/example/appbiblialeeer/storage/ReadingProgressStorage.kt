@@ -1,5 +1,6 @@
 package com.example.appbiblialeeer.storage
 
+import java.util.concurrent.Executors
 import java.util.prefs.BackingStoreException
 import java.util.prefs.Preferences
 
@@ -9,11 +10,19 @@ import java.util.prefs.Preferences
  */
 fun planPrefs(): Preferences = Preferences.userRoot().node("com/example/appbiblialeeer/PlanLectura")
 
-// Escribe en disco ya (como commit de SharedPreferences); si falla, Java lo reintenta al cerrar la app
+// ✅ Un solo hilo en segundo plano para escribir en disco: marcar una lectura no frena la interfaz
+private val escritor = Executors.newSingleThreadExecutor { tarea ->
+    Thread(tarea, "guardar-progreso").apply { isDaemon = true }
+}
+
+// Escribe en disco enseguida (como apply de SharedPreferences); si falla o la app se cierra antes,
+// Java lo guarda igualmente al salir
 private fun Preferences.guardar() {
-    try {
-        flush()
-    } catch (_: BackingStoreException) {
+    escritor.execute {
+        try {
+            flush()
+        } catch (_: BackingStoreException) {
+        }
     }
 }
 

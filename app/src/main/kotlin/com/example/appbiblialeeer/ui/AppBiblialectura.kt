@@ -1,8 +1,6 @@
 package com.example.appbiblialeeer.ui
 
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
@@ -10,6 +8,7 @@ import com.example.appbiblialeeer.data.biblePlan
 import com.example.appbiblialeeer.storage.loadCompletedDays
 import com.example.appbiblialeeer.storage.planPrefs
 import com.example.appbiblialeeer.storage.saveDayAsCompleted
+import com.example.appbiblialeeer.ui.components.Iconos
 import com.example.appbiblialeeer.ui.screens.DetalleLecturaPantalla
 import com.example.appbiblialeeer.ui.screens.ListaDiasPantalla
 
@@ -21,7 +20,7 @@ fun AppBiblialectura() {
     val listState = rememberLazyListState()
     // ✅ Un solo check para todas las tarjetas de la app (antes cada tarjeta creaba el suyo y lo
     // volvía a dibujar al entrar en pantalla); se ve exactamente igual
-    val iconoCheck = rememberVectorPainter(Icons.Filled.CheckCircle)
+    val iconoCheck = rememberVectorPainter(Iconos.Completado)
 
     BackHandler(enabled = (selectedDay != null)) {
         selectedDay = null

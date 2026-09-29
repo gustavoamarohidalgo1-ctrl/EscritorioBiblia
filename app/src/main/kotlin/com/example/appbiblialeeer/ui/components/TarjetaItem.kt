@@ -1,6 +1,5 @@
 package com.example.appbiblialeeer.ui.components
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -16,6 +15,8 @@ private val FormaTarjeta = RoundedCornerShape(20.dp)
 
 // ✅ Creados una sola vez (antes se creaban para cada tarjeta que entraba en pantalla)
 private val RellenoFila = Modifier.padding(horizontal = 22.dp, vertical = 20.dp)
+// ✅ En el escritorio, la mano indica que se puede pulsar
+private val AnchoCompletoConMano = Modifier.fillMaxWidth().pointerHoverIcon(PointerIcon.Hand)
 private val TamanoIcono = Modifier.size(22.dp)
 private val EspacioIcono = Modifier.width(12.dp)
 
@@ -37,11 +38,11 @@ fun TarjetaItem(
         else
             MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f)
 
+    // ✅ ElevatedCard(onClick): el efecto al pulsar respeta las esquinas redondeadas (con
+    // Modifier.clickable salía cuadrado) y el lector de pantalla la anuncia como botón
     ElevatedCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .pointerHoverIcon(PointerIcon.Hand) // ✅ en el escritorio, la mano indica que se puede pulsar
-            .clickable(onClick = onClick),
+        onClick = onClick,
+        modifier = AnchoCompletoConMano,
         colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         shape = FormaTarjeta,
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)

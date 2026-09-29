@@ -5,8 +5,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -17,6 +15,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.dp
 import com.example.appbiblialeeer.data.DailyReading
 import com.example.appbiblialeeer.storage.BibleTextStorage
+import com.example.appbiblialeeer.ui.components.Iconos
 import com.example.appbiblialeeer.storage.loadDayProgress
 import com.example.appbiblialeeer.storage.planPrefs
 import com.example.appbiblialeeer.storage.saveDayProgress
@@ -91,7 +90,7 @@ fun DetalleLecturaPantalla(
                     navigationIcon = {
                         IconButton(onClick = onVolver) {
                             Icon(
-                                Icons.AutoMirrored.Filled.ArrowBack,
+                                Iconos.Volver,
                                 contentDescription = "Volver"
                             )
                         }

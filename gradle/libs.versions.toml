@@ -2,14 +2,11 @@
 kotlin = "2.3.21"
 composeMultiplatform = "1.12.1"
 material3 = "1.9.0"
-# Último publicado: los iconos de Material ya no salen con cada versión de Compose
-materialIconsCore = "1.7.3"
 coroutines = "1.11.0"
 junit = "4.13.2"
 
 [libraries]
 compose-material3 = { group = "org.jetbrains.compose.material3", name = "material3", version.ref = "material3" }
-compose-material-icons-core = { group = "org.jetbrains.compose.material", name = "material-icons-core", version.ref = "materialIconsCore" }
 kotlinx-coroutines-swing = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-swing", version.ref = "coroutines" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 

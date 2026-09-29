@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollbarAdapter
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,6 +17,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.appbiblialeeer.storage.BibleTextStorage
+import com.example.appbiblialeeer.ui.components.Iconos
 import com.example.appbiblialeeer.storage.loadScrollPosition
 import com.example.appbiblialeeer.storage.planPrefs
 import com.example.appbiblialeeer.storage.saveScrollPosition
@@ -122,7 +121,7 @@ fun LecturaVersiculoPantalla(
                 title = { Text(text = referencia, style = MaterialTheme.typography.titleLarge) },
                 navigationIcon = {
                     IconButton(onClick = onVolver) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(Iconos.Volver, contentDescription = "Volver")
                     }
                 }
             )

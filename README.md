@@ -21,11 +21,16 @@ Hecha con Kotlin y [Compose Multiplatform](https://www.jetbrains.com/compose-mul
 ## Crear la app para el Mac (.dmg)
 
 ```bash
-./gradlew packageDmg
+./gradlew packageReleaseDmg
 ```
 
-El instalador queda en `app/build/compose/binaries/main/dmg/`. Ábrelo y arrastra
-**Mes de Septiembre** a Aplicaciones.
+Es la versión optimizada: ProGuard quita el código de las librerías que la app no usa, así que
+ocupa menos y arranca antes. El instalador queda en `app/build/compose/binaries/main-release/dmg/`.
+Ábrelo y arrastra **Mes de Septiembre** a Aplicaciones.
+
+Para probar esa versión optimizada sin instalarla: `./gradlew runRelease`.
+Si alguna vez diera problemas, `./gradlew packageDmg` crea la versión sin optimizar
+(en `app/build/compose/binaries/main/dmg/`).
 
 Como la app no está firmada con un certificado de Apple, la primera vez macOS no la deja abrir
 con doble clic: haz clic derecho sobre la app → **Abrir** → **Abrir**
