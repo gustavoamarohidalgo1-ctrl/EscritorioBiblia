@@ -1,15 +1,16 @@
-*.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+# Swift Package Manager
+.build/
+.swiftpm/
+Package.resolved
+
+# App y .dmg creados por crear-app.sh
+/build/
+
+# Xcode
+*.xcodeproj/xcuserdata/
+DerivedData/
+
 .DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
-local.properties
+
+# Python
+__pycache__/
