@@ -41,8 +41,8 @@ compose.desktop {
             packageName = "Mes de Septiembre"
             packageVersion = "1.0.0"
             description = "Plan de lectura bíblica de septiembre"
-            // El progreso se guarda con java.util.prefs, que no entra en el runtime mínimo por defecto
-            modules("java.prefs")
+            // Módulos de Java: basta con los de Compose por defecto. java.util.prefs (el progreso) ya
+            // entra porque java.desktop lo necesita; jdeps confirma que no hace falta ningún otro
 
             macOS {
                 bundleID = "com.example.appbiblialeeer.septiembre"
