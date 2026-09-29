@@ -1,0 +1,2 @@
+HSPLcom/example/appbiblialeeer/**->**(**)**
+Lcom/example/appbiblialeeer/**;
