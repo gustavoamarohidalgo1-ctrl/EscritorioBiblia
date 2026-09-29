@@ -27,7 +27,7 @@ swift build -c release -Xswiftc -Osize --product "$EJECUTABLE"
 BINARIOS="$(swift build -c release -Xswiftc -Osize --show-bin-path)"
 
 APP="build/$NOMBRE.app"
-echo "▸ Armando $APP…"
+echo "▸ Armando ${APP}…"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BINARIOS/$EJECUTABLE" "$APP/Contents/MacOS/"
