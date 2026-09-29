@@ -19,8 +19,11 @@ echo "▸ Armando $APP…"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BINARIOS/$EJECUTABLE" "$APP/Contents/MacOS/"
+# ✅ Sin los símbolos de depuración: el programa ocupa bastante menos y funciona igual
+strip -S -x "$APP/Contents/MacOS/$EJECUTABLE"
 # Los libros y la fuente Lora (la app los busca en Contents/Resources)
-cp -R Sources/BibliaCore/Resources/origen Sources/BibliaCore/Resources/Fuentes "$APP/Contents/Resources/"
+cp -R Sources/BibliaCore/Resources/Libros Sources/BibliaCore/Resources/Fuentes "$APP/Contents/Resources/"
+rm -f "$APP/Contents/Resources/Libros/origen.sha256" # solo lo usan los tests
 cp Recursos/icono.icns "$APP/Contents/Resources/"
 
 cat > "$APP/Contents/Info.plist" <<PLIST

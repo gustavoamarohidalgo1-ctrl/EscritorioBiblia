@@ -14,8 +14,8 @@ public enum Recursos {
         return url
     }
 
-    /// Los 66 libros, un .txt por libro
-    public static let libros = carpeta("origen")
+    /// Los 66 libros, ya limpios y comprimidos (los genera Datos/compactar.py)
+    public static let libros = carpeta("Libros")
 
     /// La fuente Lora (regular y negrita)
     public static let fuentes = carpeta("Fuentes")

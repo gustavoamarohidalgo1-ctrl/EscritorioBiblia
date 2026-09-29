@@ -10,10 +10,11 @@ let package = Package(
     ],
     targets: [
         // Todo lo que no es interfaz: plan, lector de pasajes y los libros de la Biblia
+        // (Resources/Libros se genera con Datos/compactar.py a partir de Datos/origen)
         .target(
             name: "BibliaCore",
             resources: [
-                .copy("Resources/origen"),
+                .copy("Resources/Libros"),
                 .copy("Resources/Fuentes")
             ]
         ),

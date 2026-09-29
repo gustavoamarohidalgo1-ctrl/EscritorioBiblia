@@ -42,6 +42,19 @@ swift run
 - La app recuerda por dónde ibas en cada lectura.
 - El progreso se guarda en las preferencias de tu usuario (`~/Library/Preferences`).
 
+## Cambiar el texto de la Biblia
+
+El texto fuente está en `Datos/origen/` (un `.txt` por libro). La app no lo lleva tal cual: lleva
+una versión ya limpia y comprimida, un 69 % más pequeña (4,4 MB → 1,4 MB). Después de cambiar
+cualquier `.txt`, vuelve a generarla:
+
+```bash
+python3 Datos/compactar.py
+```
+
+El script comprueba antes cada versículo (que la limpieza sea la de siempre y que no falte
+ninguno). Si se te olvida ejecutarlo, el test `testDatosAlDia` te lo recuerda.
+
 ## Tests
 
 ```bash
@@ -61,6 +74,9 @@ comprueba que se muestra exactamente el mismo texto que la versión anterior (An
 Package.swift                  El proyecto (Swift Package Manager)
 crear-app.sh                   Crea la .app, el .dmg y la instala
 Recursos/icono.icns            Icono de la app
+Datos/
+├── origen/                    Los 66 libros de la Biblia (RVR 1960), texto fuente
+└── compactar.py               Prepara los libros que lleva la app
 Sources/
 ├── BibliaCore/                Todo lo que no es interfaz
 │   ├── Plan.swift             Plan de lectura del mes
@@ -68,7 +84,7 @@ Sources/
 │   ├── Libros.swift           Los 66 libros y sus archivos
 │   ├── Biblia.swift           Lector de pasajes (con caché)
 │   └── Resources/
-│       ├── origen/            Los 66 libros de la Biblia (RVR 1960)
+│       ├── Libros/            Los libros ya limpios y comprimidos (generados)
 │       └── Fuentes/           Fuente Lora
 └── EscritorioBiblia/          La app (SwiftUI)
     ├── EscritorioBibliaApp.swift

@@ -1,7 +1,7 @@
 import Foundation
 
-/// Un libro de la Biblia: su posición en el orden canónico (Génesis = 1 … Apocalipsis = 66),
-/// que es el primer número de cada línea de su archivo, y el archivo en resources/origen.
+/// Un libro de la Biblia: su posición en el orden canónico (Génesis = 1 … Apocalipsis = 66)
+/// y su archivo en Resources/Libros (lo genera Datos/compactar.py).
 public struct Libro: Equatable, Sendable {
     public let id: Int
     public let archivo: String
@@ -28,7 +28,7 @@ public enum Libros {
     public static func buscar(_ nombre: String) throws -> Libro {
         let clave = alias(normalizar(nombre))
         guard let id = idPorClave[clave] else { throw ErrorBiblia.libroDesconocido(nombre) }
-        return Libro(id: id, archivo: "\(clave).txt")
+        return Libro(id: id, archivo: "\(clave).z")
     }
 
     /// Minúsculas, sin tildes ni puntos y con "_" en vez de espacios: "2 Crónicas" → "2_cronicas"

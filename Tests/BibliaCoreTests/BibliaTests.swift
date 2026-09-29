@@ -50,64 +50,62 @@ final class BibliaTests: XCTestCase {
                        Referencia(libro: "Juan", capituloInicio: 9, versiculoInicio: 1, capituloFin: 9, versiculoFin: 23))
         XCTAssertEqual(try Referencia("Esdras 1-2"), Referencia(libro: "Esdras", capituloInicio: 1, capituloFin: 2))
         XCTAssertEqual(try Referencia(" 1 Juan 4 "), Referencia(libro: "1 Juan", capituloInicio: 4))
-        XCTAssertEqual(try Libros.buscar("Cantar de los Cantares"), Libro(id: 22, archivo: "cantares.txt"))
-        XCTAssertEqual(try Libros.buscar("2 Crónicas"), Libro(id: 14, archivo: "2_cronicas.txt"))
+        XCTAssertEqual(try Libros.buscar("Cantar de los Cantares"), Libro(id: 22, archivo: "cantares.z"))
+        XCTAssertEqual(try Libros.buscar("2 Crónicas"), Libro(id: 14, archivo: "2_cronicas.z"))
     }
 
-    // El texto se limpia igual que el cleanText original (reemplazos + expresión regular sobre el texto)
-    func testLimpiezaIgualQueAntes() throws {
-        let textos = [
-            "Hola /nmundo", "  dos  espacios  ", "\\n Cantaré\\tyo\\r", "a/b\\c", "tab\tfinal\t", "/n", "", "fin /n",
-            "ñandú /n/n ¿Quién?"
-        ]
-        for texto in textos {
-            let linea = Data("(1, 1, 7, '\(texto)'),".utf8)
-            let obtenido = Biblia.lineas(de: linea, libro: 1, referencia: try Referencia("Génesis 1"))
-            XCTAssertEqual(obtenido, ["7 " + limpiezaOriginal(texto)], texto)
-        }
+    // Formato compacto: "capítulo<TAB>versículo<TAB>texto", también sin salto final y con texto vacío
+    func testFormatoCompacto() throws {
+        let libro = Data("1\t1\tA\n1\t2\t\n2\t1\tC".utf8)
+        XCTAssertEqual(Biblia.lineas(de: libro, referencia: try Referencia("X 1:2-2:1")),
+                       ["Capítulo 1", "2 ", "Capítulo 2", "1 C"])
+        XCTAssertEqual(Biblia.lineas(de: libro, referencia: try Referencia("X 1")), ["1 A", "2 "])
+        XCTAssertEqual(Biblia.lineas(de: libro, referencia: try Referencia("X 3")), [])
     }
 
-    private func limpiezaOriginal(_ texto: String) -> String {
-        texto
-            .replacingOccurrences(of: "\\n", with: "\n")
-            .replacingOccurrences(of: "/n", with: "\n")
-            .replacingOccurrences(of: "\\r", with: " ")
-            .replacingOccurrences(of: "\r", with: " ")
-            .replacingOccurrences(of: "\\t", with: " ")
-            .replacingOccurrences(of: "\t", with: " ")
-            .replacingOccurrences(of: "[ \\t\\n\\x0B\\f\\r]+", with: " ", options: .regularExpression)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    // Los 66 libros completos y en orden: cada capítulo empieza en el versículo 1 y no se salta ninguno
+    // Los 66 libros que lleva la app, completos y en orden: cada capítulo empieza en el versículo 1
+    // y no se salta ninguno (así apareció que faltaba Génesis 33:12)
     func testLibrosCompletosYEnOrden() throws {
-        let formato = try NSRegularExpression(pattern: "^\\((\\d+), (\\d+), (\\d+), '.*'\\),?$")
-        let archivos = try FileManager.default.contentsOfDirectory(at: Recursos.libros, includingPropertiesForKeys: nil)
-            .filter { $0.pathExtension == "txt" }
-        XCTAssertEqual(archivos.count, 66)
-        for archivo in archivos {
-            let nombre = archivo.deletingPathExtension().lastPathComponent.replacingOccurrences(of: "_", with: " ")
-            let id = try Libros.buscar(nombre).id
+        XCTAssertEqual(Libros.claves.count, 66)
+        for clave in Libros.claves {
+            let libro = try Libros.buscar(clave.replacingOccurrences(of: "_", with: " "))
+            let texto = String(decoding: try Biblia.texto(de: libro), as: UTF8.self)
             var capitulo = 0
             var versiculo = 0
-            let texto = try String(contentsOf: archivo, encoding: .utf8)
-            for (i, linea) in texto.components(separatedBy: "\n").enumerated() where !linea.isEmpty {
-                let donde = "\(archivo.lastPathComponent):\(i + 1)"
-                let rango = NSRange(linea.startIndex..., in: linea)
-                guard let partes = formato.firstMatch(in: linea, range: rango) else {
+            for (i, linea) in texto.split(separator: "\n").enumerated() {
+                let donde = "\(clave):\(i + 1)"
+                let campos = linea.split(separator: "\t", maxSplits: 2, omittingEmptySubsequences: false)
+                guard campos.count == 3, let c = Int(campos[0]), let v = Int(campos[1]) else {
                     XCTFail("\(donde): formato inválido")
                     continue
                 }
-                let numeros = (1...3).map { Int((linea as NSString).substring(with: partes.range(at: $0)))! }
-                XCTAssertEqual(numeros[0], id, "\(donde): libro")
-                if numeros[1] != capitulo {
-                    XCTAssertEqual(numeros[1], capitulo + 1, "\(donde): capítulo")
-                    capitulo = numeros[1]
+                if c != capitulo {
+                    XCTAssertEqual(c, capitulo + 1, "\(donde): capítulo")
+                    capitulo = c
                     versiculo = 0
                 }
-                XCTAssertEqual(numeros[2], versiculo + 1, "\(donde): versículo")
-                versiculo = numeros[2]
+                XCTAssertEqual(v, versiculo + 1, "\(donde): versículo")
+                versiculo = v
             }
+            XCTAssertGreaterThan(capitulo, 0, clave)
+        }
+    }
+
+    // Si se cambia algún .txt de Datos/origen hay que volver a ejecutar Datos/compactar.py
+    func testDatosAlDia() throws {
+        let raiz = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+            .deletingLastPathComponent().deletingLastPathComponent()
+        let esperadas = try String(contentsOf: Recursos.libros.appendingPathComponent("origen.sha256"), encoding: .utf8)
+        var huellas: [String: String] = [:] // archivo -> huella
+        for fila in esperadas.split(separator: "\n") {
+            let partes = fila.split(separator: " ", omittingEmptySubsequences: true)
+            huellas[String(partes[1])] = String(partes[0])
+        }
+        XCTAssertEqual(huellas.count, 66)
+        for (archivo, esperada) in huellas {
+            let datos = try Data(contentsOf: raiz.appendingPathComponent("Datos/origen/\(archivo)"))
+            let huella = SHA256.hash(data: datos).map { String(format: "%02x", $0) }.joined()
+            XCTAssertEqual(huella, esperada, "\(archivo) cambió: ejecuta python3 Datos/compactar.py")
         }
     }
 
@@ -147,9 +145,10 @@ final class BibliaTests: XCTestCase {
                 for c in referencia.unicodeScalars where caracteres[c] == nil { caracteres[c] = "plan: \(referencia)" }
             }
         }
-        for archivo in try FileManager.default.contentsOfDirectory(at: Recursos.libros, includingPropertiesForKeys: nil) {
-            for c in try String(contentsOf: archivo, encoding: .utf8).unicodeScalars where caracteres[c] == nil {
-                caracteres[c] = "origen/\(archivo.lastPathComponent)"
+        for clave in Libros.claves {
+            let libro = try Libros.buscar(clave.replacingOccurrences(of: "_", with: " "))
+            for c in String(decoding: try Biblia.texto(de: libro), as: UTF8.self).unicodeScalars where caracteres[c] == nil {
+                caracteres[c] = "libro \(clave)"
             }
         }
         // Textos de la app: el contenido de las comillas en Sources/
@@ -162,8 +161,8 @@ final class BibliaTests: XCTestCase {
                 caracteres[c] = "\(archivo.lastPathComponent): texto"
             }
         }
-        // Saltos de línea, y el guion suave (invisible) que la fuente original tampoco tenía
-        let ignorados: Set<Unicode.Scalar> = ["\n", "\r", "\u{00AD}"]
+        // Separadores del formato, y el guion suave (invisible) que la fuente original tampoco tenía
+        let ignorados: Set<Unicode.Scalar> = ["\n", "\r", "\t", "\u{00AD}"]
 
         for archivo in ["lora_regular.ttf", "lora_bold.ttf"] {
             let url = Recursos.fuentes.appendingPathComponent(archivo)
